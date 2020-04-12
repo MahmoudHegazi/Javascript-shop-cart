@@ -1,4 +1,8 @@
-<!DOCTYPE html><html><head>
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Rancho&effect=shadow-multiple|3d-float|fire-animation">
 <title>Car Shop</title>
 <style>
 .container {
@@ -112,6 +116,13 @@
   .sidenav {padding-top: 15px;}
   .sidenav a {font-size: 18px;}
 }
+
+/* class for dark mode */
+.dark-mode {
+  background-color: black;
+  color: white;
+}
+
 </style>
 
 		<script>
@@ -142,8 +153,10 @@
   <h3>Car Price</h3>
     <div id="cartPrices">
   <p id="cartPrice"></p>
-    </div>
 
+    </div>
+    <!-- total here -->
+  <p id="showPriceHere">$0</p>
   <input id="discountPoints" type="text" style="display:none;"/>
 <button id="discountButton" type="button" onclick="promo_code()" style="display:none;">Get Discount</button>
 <button id="cancelBtn" type="button" onclick="cancel()" style="display:none;">Cancel</button>
@@ -153,31 +166,31 @@
 
 
   <div id="item1" class="card">  
-  <span class="carName"><strong>BMW A700</strong></span><br/>
+  <span class="carName font-effect-fire-animation"><strong>BMW A700</strong></span><br/>
   <img id="imge1" src="https://evchargeplus.com/wp-content/uploads/2019/11/BMW-i8-Coupe0-800x600.png" alt="BMW A700 image 2020" width="95%" height="300"/><br/>
   <button name="bmwa700" class="button buy" onclick="buy()" onmouseover="getShortName = this.name"><strong>Buy</strong></button>
-  <button class="button disscount" onclick="promo_code()">Get Discount</button>  
+  <button class="button disscount" onclick="newStyle()">Change Style</button>  
   </div>
   
   <div id="item2" class="card">
-    <span class="carName"><strong>Toyta Corlla</strong></span><br/>
+    <span class="carName font-effect-fire-animation"><strong>Toyta Corlla</strong></span><br/>
     <img id="imge2" src="https://cars.sayidaty.net/sites/default/files/styles/800x470/public/corolla-super-white.png?itok=Yoc5tcZY" alt="Toyta corlla image 2020" width="95%" height="200"/><br/>
     <button name="toytacorlla" class="button buy" onclick="buy()" onmouseover="getShortName = this.name"><strong>Buy</strong></button>
-      <button class="button disscount" onclick="promo_code()">Get Discount</button>
+      <button class="button disscount" onclick="newStyle()">Change Style</button>
       </div>
   
   <div id="item3" class="card">
-    <span class="carName"><strong>Hyundai civic</strong></span><br/>
+    <span class="carName font-effect-fire-animation"><strong>Hyundai civic</strong></span><br/>
     <img id="imge3" src="https://c4d709dd302a2586107d-f8305d22c3db1fdd6f8607b49e47a10c.ssl.cf1.rackcdn.com/thumbnails/stock-images/8211efad6f9644ea235cab3942394c6f.png" alt="Hyundai civic image 2020" width="95%" height="300"/><br/>
     <button name="hyundaicivic" class="button buy" onclick="buy()" onmouseover="getShortName = this.name"><strong>Buy</strong></button>
-    <button class="button disscount" onclick="promo_code()">Get Discount</button>
+    <button class="button disscount" onclick="newStyle()">Change Style</button>
    </div>
    
   <div id="item4" class="card">
-    <span class="carName"><strong>Ferrari Portofino</strong></span><br/>
+    <span class="carName font-effect-fire-animation"><strong>Ferrari Portofino</strong></span><br/>
     <img id="imge4" src="https://static.tcimg.net/vehicles/primary/f924a09c32d337e8/2020-Ferrari-Portofino-white-full_color-driver_side_front_quarter.png" alt="kia cerato image 2020" width="93%" height="200"/><br/>
     <button name="ferrariportofino" class="button buy" onmouseover="getShortName = this.name" onclick="buy()"><strong>Buy</strong></button>
-    <button class="button disscount" onclick="promo_code()">Get Discount</button>
+    <button class="button disscount" onclick="newStyle()">Change Style</button>
   </div>
 
 
@@ -193,18 +206,45 @@
 
 
 <script>
+ /* cart kinda useless */
+ let cart = [];
+ 
   var cartPrice = document.getElementById("cartPrice");
   var cartName = document.getElementById("cartname");
   
   var promoCode = document.getElementById("discountPoints");
   var cancelButton = document.getElementById("cancelBtn");
   var discountBtn = document.getElementById("discountButton");
+  var showTotal = document.getElementById("showPriceHere");
+  
   
  let getShortName = "";
- let cart = [];
+ let myCart = {
+   id: 1,
+   cart: [],
+   itemsPrices: [],
+   prices: [],
+   final: 0,
+   gettotal: function() {
+     for (var price = 0; price <  myCart.prices.length; price++) {
+        myCart.final += myCart.prices[price];
+        
+     }
+     
+   },
+   beforeDiscount: 0,
+   priceAfterDiscount: 0,
+   getPrices: function() {
+     for (var i = 0; i < myCart.cart.length; i++) {
+        itemsPrices.push("item : " + myCart.cart.name + " = $" + myCart.cart.total);
+        return itemsPrices;
+     }
+   }
+ 
+ };
  let nameIds = [];
  let pricesIds = [];
-
+ let imgesIds = [];
  let car = undefined;
 
 let bmw_a700 = {
@@ -212,6 +252,7 @@ let bmw_a700 = {
   model: "2020",
   color: "white",
   discountLimit: "low",
+  img: "https://evchargeplus.com/wp-content/uploads/2019/11/BMW-i8-Coupe0-800x600.png",
   id: 1,
   codeName: "bmwa700",
   tax: 15 / 100,
@@ -220,12 +261,8 @@ let bmw_a700 = {
   totalDiscount: 0,
   discount: false,
   discountValue: 0,
-  total: undefined,
-  updateLimit: function(type) {if (type === "low" || type === "mid" || 
-  type === "high") {car.discountLimit = type}},
-  addDiscount: function () { car.discountLimit === "low" ? car.discountValue = 5 / 100 : car.discountLimit === "mid" ? car.discountValue = 10 / 100 : car.discountLimit === "high" ? car.discountValue = 20 / 100 : car.discount = false },
-  price: function() { car.afterTax = car.carPrice *  car.tax;  car.totalDiscount = (car.carPrice + car.tax) * car.discountValue; 
-  car.total =  car.carPrice + car.afterTax - car.totalDiscount.toFixed(); console.log("Your Total Price is " + car.total.toFixed()); return car.total.toFixed()}
+  total: undefined
+
 };
 
 let totyaCorlla = {
@@ -233,6 +270,7 @@ let totyaCorlla = {
   model: "2020",
   color: "white",
   discountLimit: "mid",
+  img: "https://cars.sayidaty.net/sites/default/files/styles/800x470/public/corolla-super-white.png?itok=Yoc5tcZY",
   id: 2,
   codeName: "toytacorlla",
   tax: 10 / 100,
@@ -241,7 +279,7 @@ let totyaCorlla = {
   totalDiscount: 0,
   discount: false,
   discountValue: 0,
-  total: undefined,
+  total: undefined
 };
 
 
@@ -252,6 +290,7 @@ let hyundaiCivic = {
   id: 3,
   codeName: "hyundaicivic",
   discountLimit: "high",
+  img: "https://c4d709dd302a2586107d-f8305d22c3db1fdd6f8607b49e47a10c.ssl.cf1.rackcdn.com/thumbnails/stock-images/8211efad6f9644ea235cab3942394c6f.png",
   tax: 4 / 100,
   carPrice: 250000,
   afterTax: undefined,
@@ -267,6 +306,7 @@ let ferrari = {
   color: "white",
   id: 4,
   codeName: "ferrariportofino",
+  img: "https://static.tcimg.net/vehicles/primary/f924a09c32d337e8/2020-Ferrari-Portofino-white-full_color-driver_side_front_quarter.png",
   discountLimit: "none",
   tax: 20 / 100,
   carPrice: 6000000,
@@ -274,7 +314,7 @@ let ferrari = {
   totalDiscount: 0,
   discount: false,
   discountValue: 0,
-  total: undefined,
+  total: undefined
 };
 
 
@@ -293,20 +333,29 @@ function addToCart(car, price) {
   var parentName = document.getElementById("cartNames");
   var parentPrice = document.getElementById("cartPrices");
   var carName = document.createElement("p");  
-  carName.innerHTML = x.name;
+  carName.innerHTML = "* " + x.name;
   carName.id = "name" + ids;
   nameIds.push(carName.id)
   ids += 1;
-  alert("Name Id : " +carName.id);
+  console.log("Name Id : " +carName.id);
   parentName.appendChild(carName);
   var carPric = document.createElement("p");
   carPric.id = "price" + ids;
   pricesIds.push(carPric.id);
-  ids += 1;
-  alert("price Id : " + carPric.id);
-  carPric.innerHTML = total;
+  console.log("price Id : " + carPric.id);
+  carPric.innerHTML = "Price : $" + total + " ( " + x.name + " )";
   parentPrice.appendChild(carPric);
-  alert(nameIds + pricesIds);
+  console.log(nameIds + pricesIds);
+  
+  /* img */
+  var carImage = document.createElement("img");
+  carImage.src = car.img;
+  carImage.style.width = "100px";
+  carImage.style.width = "100px";
+  carImage.id = "image" + ids;
+  imgesIds.push(carImage.id);
+  parentName.appendChild(carImage);
+  
 }
 
 
@@ -326,11 +375,17 @@ function buy() {
   for (var i = 0; i < cars.length; i++) {
     if (cars[i]["codeName"] === getShortName) {
       car = cars[i];
-      cart.push(cars[i]);
-      alert(cart);
+      myCart.cart.push(cars[i]);
+      alert("New Item Added To Your Cart " + car.name + "!");
       var carTax = car.carPrice * car.tax;
       var afterTax = car.carPrice + carTax;
-      addToCart(car, afterTax);
+      myCart.beforeDiscount = afterTax;
+      myCart.prices.push(afterTax);      
+      addToCart(car, afterTax);      
+      myCart.gettotal(); 
+      showTotal.innerHTML = "Total: $" + myCart.final;
+      
+      
 
  
   }
@@ -340,41 +395,57 @@ function buy() {
 
 }
 
+/* this will increase if user used promoCode */
+var trials = 0;
 
-  
-function promo_code() {
-   var carTax = car.carPrice * car.tax;
-   var afterTax = car.carPrice + carTax;
+/* this part for fun in real we could use hash and database and more secuirty */
+function promo_code() {  
+   var discountLimit= 0;
+   var sorry = false;
    var promoCode = document.getElementById("discountPoints");
-   if (promoCode.value === "123") {
-      var limit = car.discountLimit;
-      if (limit === "low") {
-        var discount = (afterTax * 5) / 100;
-        var afterDisocunt = afterTax - discount;
-        cartPrice.innerHTML = afterDisocunt;
-      } else if (limit === "mid") {
-        var discount = (afterTax * 10) / 100;
-        var afterDisocunt = afterTax - discount;
-        cartPrice.innerHTML = afterDisocunt;
-      } else if (limit === "high") {
-        var discount = (afterTax * 15) / 100;
-        var afterDisocunt = afterTax - discount;
-        cartPrice.innerHTML = afterDisocunt;
-      } else {
-        cartPrice.innerHTML = afterTax;
-      }
+   promoCode.value === "123" ? discountLimit = 5 / 100 :
+   promoCode.value === "456" ? discountLimit = 7 / 100 :
+   promoCode.value === "789" ? discountLimit = 10 / 100 :
+   sorry = true;
+   
+   
+   if (sorry === true && trials === 0) {
+      alert("Sorry We don't Have Promo Code With value " + promoCode.value);
+
+   } else if (sorry === true && trials === 1) { 
+   
+      alert("Sorry You Can use Promo Code one time only");   
+   
+    } else if (sorry === false && trials === 1) { 
+      alert("Sorry You Can use Promo Code one time only");
+    
+    } else {
+        trials += 1
+        var discountValue = myCart.final * discountLimit;
+        myCart.final -= discountValue;
+        showTotal.innerHTML = "Total After Discount: $" + myCart.final;
+        alert("You have got Discount With Value: " + discountValue);
    }
+   
+  
+
 }
   
   
 
 
 function cancel() {
-  cart = [];
+  myCart.cart = [];
   getShortName = "";
   car = undefined;
   cartPrice.innerHTML = "";
   cartName.innerHTML = "";
+  showTotal.innerHTML = "";
+  myCart.final = 0;
+  myCart.beforeDiscount = 0;
+  myCart.priceAfterDiscount = 0;
+  myCart.prices = [];
+  myCart.itemsPrices = [];
   promoCode.value = "";
   promoCode.style.display = "none";
   discountBtn.style.display = "none";
@@ -387,12 +458,27 @@ function cancel() {
     var deleteMe = document.getElementById(pricesIds[i]);
     deleteMe.remove();
   }
+  for (var i = 0; i < nameIds.length; i ++ ) {
+    var deleteMe = document.getElementById(imgesIds[i]);
+    deleteMe.remove();
+  }
  nameIds = [];
  pricesIds = [];
+ imgesIds = [];
 }
 
+
+function newStyle() {
+    var carCard = document.getElementsByClassName("card");
+    var myCarName = document.getElementsByClassName("carName");
+  for (var i = 0; i < carCard.length; i++ ) {    
+     carCard[i].classList.toggle("dark-mode");
+
+  }  
+
+}
 </script>
 
-
+<p>promoCodes(low|mid|hight): 123 | 456 | 789</p>
 
 </body></html>
